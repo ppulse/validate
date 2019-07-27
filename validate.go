@@ -13,6 +13,8 @@ func ValidateStructByTags(data interface{}) error {
 	switch reflect.ValueOf(data).Kind() {
 	case reflect.Ptr:
 		return validatePtr(data)
+	case reflect.Struct:
+		return validateStruct(reflect.ValueOf(data))
 	}
 
 	return nil
@@ -42,7 +44,7 @@ func validateStruct(v reflect.Value) error {
 }
 
 func validateTags(tagsStr string, value reflect.Value) error {
-	tags := strings.Split(tagsStr, ",")
+	tags := strings.Split(tagsStr, ";")
 	for _, tag := range tags {
 		if err := validateEachTag(tag, value); err != nil {
 			return err
@@ -74,31 +76,117 @@ func validateEachTag(tag string, value reflect.Value) error {
 	case strings.HasPrefix(trimedTag, "@MaxLength(") && strings.HasSuffix(trimedTag, ")"):
 		maxLen, err := strconv.Atoi(trimedTag[len("@MaxLength(") : len(trimedTag)-1])
 		if err != nil {
-			return err
+			return fmt.Errorf("tag error: %+v", err)
 		}
 		return stringMaxLength(value, maxLen)
 	case strings.HasPrefix(trimedTag, "@MaxInt(") && strings.HasSuffix(trimedTag, ")"):
 		max, err := strconv.Atoi(trimedTag[len("@MaxInt(") : len(trimedTag)-1])
 		if err != nil {
-			return err
+			return fmt.Errorf("tag error: %+v", err)
 		}
 		return intMax(value, max)
 	case strings.HasPrefix(trimedTag, "@MinLength(") && strings.HasSuffix(trimedTag, ")"):
 		minLen, err := strconv.Atoi(trimedTag[len("@MinLength(") : len(trimedTag)-1])
 		if err != nil {
-			return err
+			return fmt.Errorf("tag error: %+v", err)
 		}
 		return stringMinLength(value, minLen)
 	case strings.HasPrefix(trimedTag, "@MinInt(") && strings.HasSuffix(trimedTag, ")"):
 		min, err := strconv.Atoi(trimedTag[len("@MinInt(") : len(trimedTag)-1])
 		if err != nil {
-			return err
+			return fmt.Errorf("tag error: %+v", err)
 		}
 		return intMin(value, min)
+	case strings.HasPrefix(trimedTag, "@IntIn(") && strings.HasSuffix(trimedTag, ")"):
+		elems := strings.Split(trimedTag[len("@IntIn("):len(trimedTag)-1], ",")
+		elemsInt := make([]int64, 0)
+		for _, elem := range elems {
+			elemInt, err := strconv.Atoi(strings.TrimSpace(elem))
+			if err != nil {
+				return fmt.Errorf("tag error: %+v", err)
+			}
+
+			elemsInt = append(elemsInt, int64(elemInt))
+		}
+		return intIn(value, elemsInt)
+	case strings.HasPrefix(trimedTag, "@IntNotIn(") && strings.HasSuffix(trimedTag, ")"):
+		elems := strings.Split(trimedTag[len("@IntNotIn("):len(trimedTag)-1], ",")
+		elemsInt := make([]int64, 0)
+		for _, elem := range elems {
+			elemInt, err := strconv.Atoi(strings.TrimSpace(elem))
+			if err != nil {
+				return fmt.Errorf("tag error: %+v", err)
+			}
+
+			elemsInt = append(elemsInt, int64(elemInt))
+		}
+		return intNotIn(value, elemsInt)
+	case strings.HasPrefix(trimedTag, "@StringNotIn(") && strings.HasSuffix(trimedTag, ")"):
+		elems := strings.Split(trimedTag[len("@StringNotIn("):len(trimedTag)-1], ",")
+		trimedElems := make([]string, 0)
+		for _, elem := range elems {
+			trimedElems = append(trimedElems, strings.TrimSpace(elem))
+		}
+		return stringNotIn(value, trimedElems)
+	case strings.HasPrefix(trimedTag, "@StringIn(") && strings.HasSuffix(trimedTag, ")"):
+		elems := strings.Split(trimedTag[len("@StringIn("):len(trimedTag)-1], ",")
+		trimedElems := make([]string, 0)
+		for _, elem := range elems {
+			trimedElems = append(trimedElems, strings.TrimSpace(elem))
+		}
+		return stringIn(value, trimedElems)
 	default:
 	}
 
 	return nil
+}
+
+func isTagHasOneParameterMatch(tag string, prefix string, suffix string) bool {
+	return strings.HasPrefix(tag, prefix) && strings.HasSuffix(tag, suffix)
+}
+
+func intIn(v reflect.Value, elems []int64) error {
+	return validateInt(v, func(v reflect.Value) bool {
+		for _, elem := range elems {
+			if elem == v.Int() {
+				return false
+			}
+		}
+		return true
+	}, fmt.Errorf("expected %+v, actual is %d", elems, v.Int()))
+}
+
+func intNotIn(v reflect.Value, elems []int64) error {
+	return validateInt(v, func(v reflect.Value) bool {
+		for _, elem := range elems {
+			if elem == v.Int() {
+				return true
+			}
+		}
+		return false
+	}, fmt.Errorf("expected %+v, actual is %d", elems, v.Int()))
+}
+
+func stringIn(v reflect.Value, elems []string) error {
+	return validateString(v, func(v reflect.Value) bool {
+		for _, elem := range elems {
+			if elem == v.String() {
+				return false
+			}
+		}
+		return true
+	}, fmt.Errorf("expected %+v, actual is %s", elems, v.String()))
+}
+
+func stringNotIn(v reflect.Value, elems []string) error {
+	return validateString(v, func(v reflect.Value) bool {
+		for _, elem := range elems {
+			if elem == v.String() {
+				return true
+			}
+		}
+		return false
+	}, fmt.Errorf("expected %+v, actual is %s", elems, v.String()))
 }
 
 func intZero(v reflect.Value) error {
