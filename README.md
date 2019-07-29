@@ -35,11 +35,11 @@ err := validate.ValidateStructByTags(&Person{
     Address: "China",
 })
 
-// err: name too long
+// err: address is empty
 err := validate.ValidateStructByTags(&Person{
     Age:     30,
     Name:    "name",
-    Address: "China",
+    Address: "",
 })
 ```
 
@@ -58,6 +58,7 @@ err := validate.ValidateStructByTags(&Person{
 |int/int8/int16/int32/int64|@MinInt(3)||should greater or equal than 3 (>=3)|
 |int/int8/int16/int32/int64|@IntIn(1,3,5)||shoule be 1, 3 or 5|
 |int/int8/int16/int32/int64|@IntNotIn(1,3,5)||should not be 1, 3 or 5|
+|||||
 |string|@NotEmpty||should not be empty string|
 |string|@Empty||should be empty string|
 |string|@NotBlank||should not be blank|
