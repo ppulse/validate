@@ -46,7 +46,7 @@ err := validate.ValidateStructByTags(&Person{
 ## Supported Validator
 
 |type|validator|err message|remark|
-|:-:|:-:|:-:|:-:|
+|:-:|:-|:-|:-|
 |int/int8/int16/int32/int64|@NotZero||should not be zero (!=0)|
 |int/int8/int16/int32/int64|@Zero||should be zero (=0)|
 |int/int8/int16/int32/int64|@One||should be one (=1)|
