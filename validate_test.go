@@ -181,6 +181,24 @@ func TestValidateStructInt(t *testing.T) {
 		struct {
 			one int `@validate:"@One"`
 		}{1},
+		struct {
+			positive int `@validate:"@PositiveInt"`
+		}{1},
+		struct {
+			nonnegative1 int `@validate:"@NonNegativeInt"`
+		}{0},
+		struct {
+			nonnegative2 int `@validate:"@NonNegativeInt"`
+		}{5},
+		struct {
+			nonpositive1 int `@validate:"@NonPositiveInt"`
+		}{0},
+		struct {
+			nonpositive2 int `@validate:"@NonPositiveInt"`
+		}{-1},
+		struct {
+			negative int `@validate:"@NegativeInt"`
+		}{-1},
 	}
 
 	for _, elem := range validElems {
@@ -211,6 +229,25 @@ func TestValidateStructInt(t *testing.T) {
 		struct {
 			one int `@validate:"@One"`
 		}{16},
+
+		struct {
+			positive1 int `@validate:"@PositiveInt"`
+		}{-1},
+		struct {
+			positive2 int `@validate:"@PositiveInt"`
+		}{0},
+		struct {
+			nonnegative int `@validate:"@NonNegativeInt"`
+		}{-5},
+		struct {
+			nonpositive int `@validate:"@NonPositiveInt"`
+		}{1},
+		struct {
+			negative1 int `@validate:"@NegativeInt"`
+		}{1},
+		struct {
+			negative2 int `@validate:"@NegativeInt"`
+		}{0},
 	}
 
 	for _, elem := range invalidElems {

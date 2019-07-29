@@ -57,7 +57,6 @@ func validateTags(tagsStr string, value reflect.Value) error {
 func validateEachTag(tag string, value reflect.Value) error {
 	trimedTag := strings.TrimSpace(tag)
 	switch {
-	case trimedTag == "":
 	case trimedTag == "@NotZero":
 		return intNotEquals(value, 0)
 	case trimedTag == "@Zero":
@@ -70,6 +69,14 @@ func validateEachTag(tag string, value reflect.Value) error {
 		return stringEmpty(value)
 	case trimedTag == "@NotBlank":
 		return stringNotBlank(value)
+	case trimedTag == "@PositiveInt":
+		return intMin(value, 1)
+	case trimedTag == "@NonNegativeInt":
+		return intMin(value, 0)
+	case trimedTag == "@NonPositiveInt":
+		return intMax(value, 0)
+	case trimedTag == "@NegativeInt":
+		return intMax(value, -1)
 	case strings.HasPrefix(trimedTag, "@Regexp(") && strings.HasSuffix(trimedTag, ")"):
 		re := trimedTag[len("@Regexp(") : len(trimedTag)-1]
 		return stringRegexp(value, re)
